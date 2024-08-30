@@ -30,9 +30,9 @@ export isCN=`echo $ip_info | grep -Po 'country_code\":"\K[^"]+'`;
 
 # script url
  if [ "$isCN" = "CN" ]; then
-     export mirror=raw.githubusercontent.com/yhysunwei/r4s_build_script/master
+    export mirror=init.cooluc.com
  else
-    export mirror=raw.githubusercontent.com/yhysunwei/r4s_build_script/master
+    export mirror=init2.cooluc.com
  fi
 
 
