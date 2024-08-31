@@ -29,16 +29,11 @@ ip_info=`curl -s https://ip.cooluc.com`;
 export isCN=`echo $ip_info | grep -Po 'country_code\":"\K[^"]+'`;
 
 # script url
- if [ "$isCN" = "CN" ]; then
-    export mirror=raw.githubusercontent.com/yhysunwei/r4s_build_script/master
- else
-    export mirror=raw.githubusercontent.com/yhysunwei/r4s_build_script/master
- fi
-
-
-
-
-
+if [ "$isCN" = "CN" ]; then
+    export mirror=init.cooluc.com
+else
+    export mirror=init2.cooluc.com
+fi
 
 # github actions - automatically retrieve `github raw` links
 if [ "$(whoami)" = "runner" ] && [ -n "$GITHUB_REPO" ]; then
@@ -384,19 +379,24 @@ fi
 
 # Toolchain Cache
 if [ "$BUILD_FAST" = "y" ]; then
-    LIBC=musl
+    [ "$ENABLE_GLIBC" = "y" ] && LIBC=glibc || LIBC=musl
+    [ "$isCN" = "CN" ] && github_proxy="http://gh.cooluc.com/" || github_proxy=""
     echo -e "\n${GREEN_COLOR}Download Toolchain ...${RES}"
     PLATFORM_ID=""
     [ -f /etc/os-release ] && source /etc/os-release
-        TOOLCHAIN_URL=https://github.com/sbwml/toolchain-cache/releases/latest/download
-    if [ "$USE_GCC13" = "y" ]; then
-        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_13.tar.gz -o toolchain.tar.gz --progress-bar
-    elif [ "$USE_GCC14" = "y" ]; then
-        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_14.tar.gz -o toolchain.tar.gz --progress-bar
-    elif [ "$USE_GCC15" = "y" ]; then
-        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_15.tar.gz -o toolchain.tar.gz --progress-bar
+    if [ "$PLATFORM_ID" = "platform:el9" ]; then
+        TOOLCHAIN_URL="http://127.0.0.1:8080"
     else
-        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_11.tar.gz -o toolchain.tar.gz --progress-bar
+        TOOLCHAIN_URL="$github_proxy"https://github.com/sbwml/toolchain-cache/releases/latest/download
+    fi
+    if [ "$USE_GCC13" = "y" ]; then
+        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_13.tar.gz -o toolchain.tar.gz $CURL_BAR
+    elif [ "$USE_GCC14" = "y" ]; then
+        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_14.tar.gz -o toolchain.tar.gz $CURL_BAR
+    elif [ "$USE_GCC15" = "y" ]; then
+        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_15.tar.gz -o toolchain.tar.gz $CURL_BAR
+    else
+        curl -L "$TOOLCHAIN_URL"/toolchain_"$LIBC"_"$toolchain_arch"_11.tar.gz -o toolchain.tar.gz $CURL_BAR
     fi
     echo -e "\n${GREEN_COLOR}Process Toolchain ...${RES}"
     tar -zxf toolchain.tar.gz && rm -f toolchain.tar.gz
@@ -418,7 +418,7 @@ if [ "$BUILD_TOOLCHAIN" = "y" ]; then
     echo -e "\r\n${GREEN_COLOR}Building Toolchain ...${RES}\r\n"
     make -j$cores toolchain/compile || make -j$cores toolchain/compile V=s || exit 1
     mkdir -p toolchain-cache
-    LIBC=musl
+    [ "$ENABLE_GLIBC" = "y" ] && LIBC=glibc || LIBC=musl
     if [ "$USE_GCC13" = "y" ]; then
         tar -zcf toolchain-cache/toolchain_"$LIBC"_"$toolchain_arch"_13.tar.gz ./{build_dir,dl,staging_dir,tmp} && echo -e "${GREEN_COLOR} Build success! ${RES}"
     elif [ "$USE_GCC14" = "y" ]; then
