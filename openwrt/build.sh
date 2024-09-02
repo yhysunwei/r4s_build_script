@@ -277,7 +277,7 @@ rm -rf ../master
 # Load devices Config
 if [ "$platform" = "x86_64" ]; then
     curl -s https://$mirror/openwrt/23-config-musl-x86 > .config
-    ALL_KMODS=y
+    ALL_KMODS=n
 elif [ "$platform" = "bcm53xx" ]; then
     if [ "$MINIMAL_BUILD" = "y" ]; then
         curl -s https://$mirror/openwrt/23-config-musl-r8500-minimal > .config
