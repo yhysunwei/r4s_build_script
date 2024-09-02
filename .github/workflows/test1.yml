@@ -48,4 +48,4 @@ jobs:
         lsb_release -a
         echo -e "\n\e[1;32mKernel:\e[0m"
         uname -a
-        ip a
+        ping op2.yhysunwei.top
